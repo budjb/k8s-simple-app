@@ -5,17 +5,24 @@ function App() {
   const [error, setError] = useState(null);
   const [pets, setPets] = useState([]);
 
-  useEffect(() => {
+  const loadPets = () => {
     fetch("http://localhost:8000", {
       method: "GET",
     })
       .then((res) => {
         if (!res.ok) {
-          console.log(res.statusText);
           throw Error(res.statusText);
         } else {
           return res;
         }
+      })
+      .then((res) => {
+        console.log(
+          `${new Date().toISOString()} Loaded pets from host ${res.headers.get(
+            "X-Source-Host"
+          )}`
+        );
+        return res;
       })
       .then((res) => res.json())
       .then(setPets)
@@ -24,6 +31,13 @@ function App() {
         console.error(err.message);
         setError(err.message);
       });
+  };
+
+  useEffect(loadPets, []);
+
+  useEffect(() => {
+    const timer = setInterval(loadPets, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   if (error) {
