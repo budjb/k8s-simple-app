@@ -1,29 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 function App() {
+  /**
+   * State for whether the list of pets has been loaded from the server.
+   */
   const [loaded, setLoaded] = useState(false);
+
+  /**
+   * State that stores an API response error when the request fails.
+   */
   const [error, setError] = useState(null);
+
+  /**
+   * State containing the list of pets returned from the server.
+   */
   const [pets, setPets] = useState([]);
 
-  const loadPets = () => {
+  /**
+   * Ensures that the response is successful and logs source host info to console.
+   */
+  const validateResponse = (response) => {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+    console.log(
+      `${new Date().toISOString()} Loaded pets from host ${response.headers.get(
+        "X-Source-Host"
+      )}`
+    );
+
+    return response;
+  };
+
+  /**
+   * Makes a request to the API service to retrieve a list of pets from the database.
+   */
+  const loadPets = useCallback(() => {
     fetch("http://localhost:8000", {
       method: "GET",
     })
-      .then((res) => {
-        if (!res.ok) {
-          throw Error(res.statusText);
-        } else {
-          return res;
-        }
-      })
-      .then((res) => {
-        console.log(
-          `${new Date().toISOString()} Loaded pets from host ${res.headers.get(
-            "X-Source-Host"
-          )}`
-        );
-        return res;
-      })
+      .then(validateResponse)
       .then((res) => res.json())
       .then(setPets)
       .then(() => setLoaded(true))
@@ -31,14 +48,20 @@ function App() {
         console.error(err.message);
         setError(err.message);
       });
-  };
+  }, []);
 
-  useEffect(loadPets, []);
+  /**
+   * Perform the initial load of pets from the server when the component mounts.
+   */
+  useEffect(loadPets, [loadPets]);
 
+  /**
+   * Load pets from the service on a 5 second timer.
+   */
   useEffect(() => {
     const timer = setInterval(loadPets, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [loadPets]);
 
   if (error) {
     return <p>Error loading pets: {error}</p>;
