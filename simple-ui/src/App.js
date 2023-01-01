@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
+const API_URL = "http://localhost:8000";
+
 function App() {
   /**
    * State for whether the list of pets has been loaded from the server.
@@ -37,7 +39,7 @@ function App() {
    * Makes a request to the API service to retrieve a list of pets from the database.
    */
   const loadPets = useCallback(() => {
-    fetch("http://localhost:8000", {
+    fetch(API_URL, {
       method: "GET",
     })
       .then(validateResponse)
@@ -56,7 +58,7 @@ function App() {
   useEffect(loadPets, [loadPets]);
 
   /**
-   * Load pets from the service on a 5 second timer.
+   * Load pets from the service on a 5-second timer.
    */
   useEffect(() => {
     const timer = setInterval(loadPets, 5000);
